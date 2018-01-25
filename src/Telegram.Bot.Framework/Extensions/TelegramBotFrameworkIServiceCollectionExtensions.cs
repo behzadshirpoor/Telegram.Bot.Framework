@@ -4,14 +4,12 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Framework.Extensions;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
-    /// Extensoin methods for adding a Telegram Bot to an Microsoft.Extensions.DependencyInjection.IServiceCollection
+    /// Extension methods for adding a Telegram Bot to an Microsoft.Extensions.DependencyInjection.IServiceCollection
     /// </summary>
     public static class TelegramBotFrameworkIServiceCollectionExtensions
     {
@@ -20,31 +18,30 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds a Telegram bot to the service collection using the bot's options
         /// </summary>
-        /// <typeparam name="TBot">Type of Telegarm bot</typeparam>
+        /// <typeparam name="TBot">Type of Telegram bot</typeparam>
         /// <param name="services">Instance of IServiceCollection</param>
-        /// <param name="botOptions">Optins for configuring the bot</param>
+        /// <param name="options">Options for configuring the bot</param>
         /// <returns>Instance of bot framework builder</returns>
         public static ITelegramBotFrameworkBuilder<TBot> AddTelegramBot<TBot>
-            (this IServiceCollection services, BotOptions<TBot> botOptions)
+            (this IServiceCollection services, BotOptions<TBot> options)
             where TBot : BotBase<TBot>
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            if (botOptions == null)
-                throw new ArgumentNullException(nameof(botOptions));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            ThrowExceptionIfAppSettingsInvalid<TBot>(botOptions.ApiToken, botOptions.BotUserName,
-                botOptions.WebhookUrl, botOptions.PathToCertificate);
+            ThrowIfOptionsInvalid<TBot>(options);
 
             _services = services;
-            return new TelegramBotFrameworkBuilder<TBot>(botOptions);
+            return new TelegramBotFrameworkBuilder<TBot>(options);
         }
 
         /// <summary>
         /// Adds a Telegram bot to the service collection using configurations
         /// </summary>
-        /// <typeparam name="TBot">Type of Telegarm bot</typeparam>
+        /// <typeparam name="TBot">Type of Telegram bot</typeparam>
         /// <param name="services">Instance of IServiceCollection</param>
         /// <param name="config">Configuring for the bot</param>
         /// <returns>Instance of bot framework builder</returns>
@@ -58,11 +55,12 @@ namespace Microsoft.Extensions.DependencyInjection
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
-            ThrowExceptionIfAppSettingsInvalid<TBot>(
-                config[nameof(BotOptions<TBot>.ApiToken)],
-                config[nameof(BotOptions<TBot>.BotUserName)],
-                config[nameof(BotOptions<TBot>.WebhookUrl)],
-                config[nameof(BotOptions<TBot>.PathToCertificate)]);
+            ThrowIfOptionsInvalid<TBot>(new BotOptions<TBot>
+            {
+                ApiToken = config[nameof(BotOptions<TBot>.ApiToken)],
+                WebhookUrl = config[nameof(BotOptions<TBot>.WebhookUrl)],
+                PathToCertificate = config[nameof(BotOptions<TBot>.PathToCertificate)]
+            });
 
             _services = services;
             return new TelegramBotFrameworkBuilder<TBot>(config);
@@ -90,31 +88,26 @@ namespace Microsoft.Extensions.DependencyInjection
             IServiceCollection Configure();
         }
 
-        private static void ThrowExceptionIfAppSettingsInvalid<TBot>(string apiToken, string botUserName,
-            string webhookUrl = null,
-            string certificatePath = null)
+        private static void ThrowIfOptionsInvalid<TBot>(BotOptions<TBot> options)
             where TBot : BotBase<TBot>
         {
-            if (string.IsNullOrWhiteSpace(apiToken))
+            if (string.IsNullOrWhiteSpace(options.ApiToken))
                 throw new ArgumentNullException(nameof(BotOptions<TBot>.ApiToken));
 
-            if (apiToken.Length < 25)
-                throw new ConfigurationException($"API token `{apiToken}` is too short.", "Check bot's token with BotFather");
+            if (options.ApiToken.Length < 25)
+                throw new ConfigurationException($@"API token ""{options.ApiToken}"" is too short.",
+                    "Check bot's token with BotFather");
 
-            if (string.IsNullOrWhiteSpace(botUserName))
-                throw new ArgumentNullException(nameof(BotOptions<TBot>.BotUserName));
+            if (!string.IsNullOrWhiteSpace(options.WebhookUrl) &&
+                !options.WebhookUrl.ToLower().StartsWith("https://"))
+                throw new ConfigurationException($@"Webhook url ""{options.WebhookUrl}"" is not a HTTPS url");
 
-            if (!botUserName.EndsWith("bot", StringComparison.OrdinalIgnoreCase))
-                throw new ConfigurationException($"Bot user name `{botUserName}` is not valid.",
-                    "Bot user names should end with `bot` or `_bot`.");
+            if (!string.IsNullOrWhiteSpace(options.PathToCertificate) && !File.Exists(options.PathToCertificate))
+                throw new ConfigurationException($@"Certificate file ""{options.PathToCertificate}"" does not exist.");
 
-            if (!string.IsNullOrWhiteSpace(webhookUrl) && !webhookUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                throw new ConfigurationException($"Webhook url `{webhookUrl}` is not a HTTPS url");
-
-            if (!string.IsNullOrWhiteSpace(certificatePath) && !File.Exists(certificatePath))
-                throw new ConfigurationException($"Certificate file `{certificatePath}` does not exist.");
-
-            // todo validate rest of the settings
+            if (true == options.Games?.Any(g =>
+                    string.IsNullOrWhiteSpace(g.ShortName) || string.IsNullOrWhiteSpace(g.Url)))
+                throw new ConfigurationException($@"Game(s) options invalid");
         }
 
         /// <summary>
@@ -126,17 +119,17 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             private readonly List<Type> _handlerTypes = new List<Type>();
 
-            private readonly BotOptions<TBot> _botOptions;
+            private readonly BotOptions<TBot> _botOptionsBase;
 
             private readonly IConfiguration _configuration;
 
             /// <summary>
             /// Initializes and instance of this class with the options provided
             /// </summary>
-            /// <param name="botOptions">Optoins for the bot</param>
-            public TelegramBotFrameworkBuilder(BotOptions<TBot> botOptions)
+            /// <param name="botOptionsBase">Options for the bot</param>
+            public TelegramBotFrameworkBuilder(BotOptions<TBot> botOptionsBase)
             {
-                _botOptions = botOptions;
+                _botOptionsBase = botOptionsBase;
             }
 
             /// <summary>
@@ -168,15 +161,14 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 EnsureValidConfiguration();
 
-                if (_botOptions != null)
+                if (_botOptionsBase != null)
                 {
                     _services.Configure<BotOptions<TBot>>(x =>
                     {
-                        x.ApiToken = _botOptions.ApiToken;
-                        x.BotUserName = _botOptions.BotUserName;
-                        x.WebhookUrl = _botOptions.WebhookUrl;
-                        x.PathToCertificate = _botOptions.PathToCertificate;
-                        x.GameOptions = _botOptions.GameOptions;
+                        x.ApiToken = _botOptionsBase.ApiToken;
+                        x.WebhookUrl = _botOptionsBase.WebhookUrl;
+                        x.PathToCertificate = _botOptionsBase.PathToCertificate;
+                        x.GameOptions = _botOptionsBase.GameOptions;
                     });
                 }
                 else
@@ -188,15 +180,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 _handlerTypes.ForEach(x => _services.AddTransient(x));
 
-                _services.AddScoped<IUpdateHandlersAccessor<TBot>>(factory =>
-                {
-                    var handlers = _handlerTypes.Select(x => (IUpdateHandler)factory.GetRequiredService(x)).ToArray();
-                    return new UpdateHanldersAccessor<TBot>(handlers);
-                });
+                _services.AddScoped<IUpdateHandlersProvider<TBot>>(factory =>
+                    new UpdateHanldersProviderAspNetCore<TBot>(factory, _handlerTypes)
+                );
 
-                _services.AddScoped<IUpdateParser<TBot>, UpdateParser<TBot>>();
-
-                _services.AddScoped<IBotManager<TBot>, BotManager<TBot>>();
+                _services.AddScoped<UpdateManager<TBot>>();
+                _services.AddScoped<IUpdateManager<TBot>, UpdateManager<TBot>>();
 
                 return _services;
             }

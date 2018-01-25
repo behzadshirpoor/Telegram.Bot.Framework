@@ -14,7 +14,7 @@ namespace SampleEchoBot
         private readonly ILogger<EchoBot> _logger;
 
         public EchoBot(IOptions<BotOptions<EchoBot>> botOptions, ILogger<EchoBot> logger)
-            : base(botOptions)
+            : base(botOptions.Value)
         {
             _logger = logger;
         }
@@ -28,8 +28,8 @@ namespace SampleEchoBot
 
             switch (update.Type)
             {
-                case UpdateType.MessageUpdate when
-                new[] {ChatType.Private, ChatType.Group, ChatType.Supergroup}.Contains(update.Message.Chat.Type):
+                case UpdateType.Message when
+                new[] { ChatType.Private, ChatType.Group, ChatType.Supergroup }.Contains(update.Message.Chat.Type):
                     text = $"Unable to handle message update of type `{update.Message.Type}`.";
                     replyToMesageId = update.Message.MessageId;
                     break;
@@ -47,7 +47,7 @@ namespace SampleEchoBot
 
         public override Task HandleFaultedUpdate(Update update, Exception e)
         {
-            _logger.LogError($"Exception occured in handling update of type `{0}`: {1}", update.Type, e.Message);
+            _logger.LogError(@"Exception occurred in handling update of type ""{0}"": {1}", update.Type, e.Message);
 
             return Task.CompletedTask;
         }

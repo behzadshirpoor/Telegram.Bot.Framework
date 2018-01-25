@@ -1,12 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RecurrentTasks;
 using SampleGames.Bots.CrazyCircle;
 using Telegram.Bot.Framework;
 
@@ -37,7 +35,6 @@ namespace SampleGames
                 .AddUpdateHandler<StartCommand>()
                 .AddUpdateHandler<CrazyCircleGameHandler>()
                 .Configure();
-            services.AddTask<BotUpdateGetterTask<CrazyCircleBot>>();
 
             #endregion
         }
@@ -80,7 +77,6 @@ namespace SampleGames
             if (env.IsDevelopment())
             {
                 app.UseTelegramBotLongPolling<CrazyCircleBot>();
-                app.StartTask<BotUpdateGetterTask<CrazyCircleBot>>(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(3));
                 logger.LogInformation("Update getting task is scheduled for bot " + nameof(CrazyCircleBot));
             }
             else

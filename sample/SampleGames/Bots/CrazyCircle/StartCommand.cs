@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 
 namespace SampleGames.Bots.CrazyCircle
@@ -17,13 +16,12 @@ namespace SampleGames.Bots.CrazyCircle
         public StartCommand()
             : base(Constants.CommandName)
         {
-
         }
 
-        public override async Task<UpdateHandlingResult> HandleCommand(Update update, StartCommandArgs args)
+        public override async Task<UpdateHandlingResult> HandleCommand(IBot bot, Update update, StartCommandArgs args)
         {
-            await Bot.Client.SendGameAsync(update.Message.Chat.Id, "crazycircle");
-            
+            await bot.Client.SendGameAsync(update.Message.Chat.Id, "crazycircle");
+
             return UpdateHandlingResult.Handled;
         }
 

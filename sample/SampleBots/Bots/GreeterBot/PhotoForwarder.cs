@@ -1,18 +1,14 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 
 namespace SampleBots.Bots.GreeterBot
 {
-    public class PhotoForwarder : UpdateHandlerBase
+    public class PhotoForwarder : IUpdateHandler
     {
-        public override bool CanHandleUpdate(IBot bot, Update update)
-        {
-            return update.Message?.Photo != null;
-        }
+        public bool CanHandleUpdate(IBot bot, Update update) => update.Message?.Photo != null;
 
-        public override async Task<UpdateHandlingResult> HandleUpdateAsync(IBot bot, Update update)
+        public async Task<UpdateHandlingResult> HandleUpdateAsync(IBot bot, Update update)
         {
             await bot.Client.ForwardMessageAsync(update.Message.Chat.Id,
                 update.Message.Chat.Id,

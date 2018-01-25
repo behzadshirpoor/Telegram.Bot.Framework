@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 
 namespace Telegram.Bot.Framework.Tests.Helpers
@@ -13,13 +12,11 @@ namespace Telegram.Bot.Framework.Tests.Helpers
 
     public class TestCommand : CommandBase<TestCommandArgs>
     {
-        public TestCommand(string name)
-            : base(name)
+        public TestCommand(string name) : base(name)
         {
-
         }
 
-        public override Task<UpdateHandlingResult> HandleCommand(Update update, TestCommandArgs args)
+        public override Task<UpdateHandlingResult> HandleCommand(IBot bot, Update update, TestCommandArgs args)
         {
             throw new System.NotImplementedException();
         }

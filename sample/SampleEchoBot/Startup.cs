@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
 
 namespace SampleEchoBot
 {
@@ -29,6 +26,7 @@ namespace SampleEchoBot
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddTelegramBot<EchoBot>(_configuration.GetSection("EchoBot"))
+                .AddUpdateHandler<SayHelloHandler>()
                 .AddUpdateHandler<EchoCommand>()
                 .Configure();
         }
@@ -42,33 +40,8 @@ namespace SampleEchoBot
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-
-                var source = new CancellationTokenSource();
-                Task.Factory.StartNew(() =>
-                {
-                    logger.LogDebug("Press Enter to stop bot manager...");
-                    Console.ReadLine();
-                    source.Cancel();
-                });
-
-                Task.Factory.StartNew(async () =>
-                {
-                    var botManager = app.ApplicationServices.GetRequiredService<IBotManager<EchoBot>>();
-
-                    // make sure webhook is disabled so we can use long-polling
-                    await botManager.SetWebhookStateAsync(false);
-                    logger.LogDebug("Webhook is disabled. Staring update handling...");
-
-                    while (!source.IsCancellationRequested)
-                    {
-                        await Task.Delay(3_000);
-                        await botManager.GetAndHandleNewUpdatesAsync();
-                    }
-                    logger.LogDebug("Bot manager stopped.");
-                }).ContinueWith(t =>
-                {
-                    if (t.IsFaulted) throw t.Exception;
-                });
+                app.UseTelegramBotLongPolling<EchoBot>();
+                logger.LogInformation("Update getting task is scheduled for bot " + nameof(EchoBot));
             }
             else
             {
@@ -84,7 +57,6 @@ namespace SampleEchoBot
                 app.UseTelegramBotWebhook<EchoBot>();
                 logger.LogInformation("Webhook is set for bot " + nameof(EchoBot));
             }
-
 
             app.Run(async context =>
             {

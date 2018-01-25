@@ -13,7 +13,7 @@ namespace SampleBots.Bots.GreeterBot
         private readonly ILogger _logger;
 
         public GreeterBot(IOptions<BotOptions<GreeterBot>> botOptions, ILogger<GreeterBot> logger)
-            : base(botOptions)
+            : base(botOptions.Value)
         {
             _logger = logger;
         }
@@ -24,7 +24,7 @@ namespace SampleBots.Bots.GreeterBot
 
             const string unknownUpdateText = "Sorry! I don't know what to do with this message";
 
-            if (update.Type == UpdateType.MessageUpdate)
+            if (update.Type == UpdateType.Message)
             {
                 await Client.SendTextMessageAsync(update.Message.Chat.Id,
                     unknownUpdateText,
@@ -32,7 +32,7 @@ namespace SampleBots.Bots.GreeterBot
             }
             else
             {
-                
+
             }
         }
 

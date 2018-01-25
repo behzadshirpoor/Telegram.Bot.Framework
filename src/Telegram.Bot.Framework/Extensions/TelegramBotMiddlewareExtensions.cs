@@ -1,15 +1,13 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Telegram.Bot.Framework.Abstractions;
-using Telegram.Bot.Framework.Extensions;
-using Telegram.Bot.Framework.Middlewares;
 
 // ReSharper disable once CheckNamespace
 namespace Telegram.Bot.Framework
 {
     /// <summary>
-    /// Extentions for adding Telegram Bot framework to the ASP.NET Core middleware
+    /// Extensions for adding Telegram Bot framework to the ASP.NET Core middleware
     /// </summary>
     public static class TelegramBotMiddlewareExtensions
     {
@@ -23,11 +21,12 @@ namespace Telegram.Bot.Framework
         public static IApplicationBuilder UseTelegramBotWebhook<TBot>(this IApplicationBuilder app, bool ensureWebhookEnabled = true)
             where TBot : BotBase<TBot>
         {
-            IBotManager<TBot> botManager = FindBotManager<TBot>(app);
+            var mgr = FindBotUpdateManager<TBot>(app);
 
             if (ensureWebhookEnabled)
             {
-                botManager.SetWebhookStateAsync(true).Wait();
+                mgr.InitAsync().GetAwaiter().GetResult();
+                mgr.SetWebhookStateAsync(true).GetAwaiter().GetResult();
             }
 
             return app.UseMiddleware<TelegramBotMiddleware<TBot>>();
@@ -43,12 +42,22 @@ namespace Telegram.Bot.Framework
         public static IApplicationBuilder UseTelegramBotLongPolling<TBot>(this IApplicationBuilder app, bool ensureWebhookDisabled = true)
             where TBot : BotBase<TBot>
         {
-            IBotManager<TBot> botManager = FindBotManager<TBot>(app);
+            var mgr = FindBotUpdateManager<TBot>(app);
 
             if (ensureWebhookDisabled)
             {
-                botManager.SetWebhookStateAsync(false).Wait();
+                mgr.SetWebhookStateAsync(false).GetAwaiter().GetResult();
             }
+
+            Task.Run(async () =>
+            {
+                await mgr.InitAsync();
+                while (string.IsNullOrWhiteSpace(""))
+                {
+                    await Task.Delay(3_000);
+                    await mgr.GetHandleUpdatesAsync();
+                }
+            });
 
             return app;
         }
@@ -67,14 +76,17 @@ namespace Telegram.Bot.Framework
             return app;
         }
 
-        private static IBotManager<TBot> FindBotManager<TBot>(IApplicationBuilder app)
+        private static UpdateManager<TBot> FindBotUpdateManager<TBot>(IApplicationBuilder app)
             where TBot : BotBase<TBot>
         {
-            IBotManager<TBot> botManager;
             try
             {
-                botManager = app.ApplicationServices.GetRequiredService<IBotManager<TBot>>();
-                if (botManager == null)
+                if (app.ApplicationServices.GetRequiredService<IUpdateManager<TBot>>()
+                    is UpdateManager<TBot> mgr)
+                {
+                    return mgr;
+                }
+                else
                 {
                     throw new NullReferenceException();
                 }
@@ -82,10 +94,9 @@ namespace Telegram.Bot.Framework
             catch (Exception)
             {
                 throw new ConfigurationException(
-                    "Bot Manager service is not available", string.Format("Use services.{0}<{1}>()",
+                    "Bot UpdateManager service is not available", string.Format("Use services.{0}<{1}>()",
                         nameof(TelegramBotFrameworkIServiceCollectionExtensions.AddTelegramBot), typeof(TBot).Name));
             }
-            return botManager;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 
 namespace SampleEchoBot
@@ -16,14 +15,13 @@ namespace SampleEchoBot
     {
         public EchoCommand() : base(name: "echo")
         {
-            
         }
 
-        public override async Task<UpdateHandlingResult> HandleCommand(Update update, EchoCommandArgs args)
+        public override async Task<UpdateHandlingResult> HandleCommand(IBot bot, Update update, EchoCommandArgs args)
         {
             string replyText = string.IsNullOrWhiteSpace(args.ArgsInput) ? "Echo What?" : args.ArgsInput;
 
-            await Bot.Client.SendTextMessageAsync(
+            await bot.Client.SendTextMessageAsync(
                 update.Message.Chat.Id,
                 replyText,
                 replyToMessageId: update.Message.MessageId);

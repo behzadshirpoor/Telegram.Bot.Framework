@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -28,9 +27,9 @@ namespace SampleBots.Bots.GreeterBot
 
         }
 
-        public override async Task<UpdateHandlingResult> HandleCommand(Update update, StartCommandArgs args)
+        public override async Task<UpdateHandlingResult> HandleCommand(IBot bot, Update update, StartCommandArgs args)
         {
-            await Bot.Client.SendTextMessageAsync(update.Message.Chat.Id,
+            await bot.Client.SendTextMessageAsync(update.Message.Chat.Id,
                 string.Format(StartMessageFormat, update.Message.From.FirstName),
                 ParseMode.Markdown,
                 replyToMessageId: update.Message.ForwardFromMessageId);

@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Telegram.Bot.Framework.Abstractions;
 
-namespace Telegram.Bot.Framework.Middlewares
+// ReSharper disable once CheckNamespace
+namespace Telegram.Bot.Framework
 {
     /// <summary>
     /// Middleware for handling Telegram games' scores requests
@@ -18,7 +18,7 @@ namespace Telegram.Bot.Framework.Middlewares
     {
         private readonly RequestDelegate _next;
 
-        private readonly IInternalBotManager<TBot> _botManager;
+        private readonly UpdateManager<TBot> _updateManager;
 
         private readonly ILogger<TelegramGameScoreMiddleware<TBot>> _logger;
 
@@ -26,15 +26,15 @@ namespace Telegram.Bot.Framework.Middlewares
         /// Initializes an instance of middleware
         /// </summary>
         /// <param name="next">Instance of request delegate</param>
-        /// <param name="botManager">Bot manager for the bot</param>
+        /// <param name="updateManager"></param>
         /// <param name="logger">Logger for this middleware</param>
         public TelegramGameScoreMiddleware(RequestDelegate next,
-            IBotManager<TBot> botManager,
+            IUpdateManager<TBot> updateManager,
             ILogger<TelegramGameScoreMiddleware<TBot>> logger)
         {
             _next = next;
             _logger = logger;
-            _botManager = (IInternalBotManager<TBot>) botManager;
+            _updateManager = (UpdateManager<TBot>)updateManager;
         }
 
         /// <summary>
@@ -45,20 +45,20 @@ namespace Telegram.Bot.Framework.Middlewares
         {
             string path = context.Request.Path.Value;
 
-            string gameShortname = _botManager.BotGameOptions
+            string gameShortname = _updateManager.GamesOptions
                 .SingleOrDefault(g =>
-                    _botManager.ReplaceGameUrlTokens(g.ScoresUrl, g.ShortName).EndsWith(path)
+                    _updateManager.ReplaceGameUrlTokens(g.ScoresUrl, g.ShortName).EndsWith(path)
                 )
                 ?.ShortName;
 
             if (string.IsNullOrWhiteSpace(gameShortname) ||
-                !new[] {HttpMethods.Post, HttpMethods.Get}.Contains(context.Request.Method))
+                !new[] { HttpMethods.Post, HttpMethods.Get }.Contains(context.Request.Method))
             {
                 await _next.Invoke(context);
                 return;
             }
 
-            var gameHandlerTuple = _botManager.TryFindGameHandler(gameShortname);
+            var gameHandlerTuple = _updateManager.TryFindGameHandler(gameShortname);
             if (!gameHandlerTuple.Success)
             {
                 await _next.Invoke(context);
@@ -77,7 +77,7 @@ namespace Telegram.Bot.Framework.Middlewares
                     return;
                 }
 
-                var highScores = await gameHandler.GetHighestScoresAsync(_botManager.Bot, playerid);
+                var highScores = await gameHandler.GetHighestScoresAsync(_updateManager.Bot, playerid);
 
                 var responseData = JsonConvert.SerializeObject(highScores);
                 context.Response.StatusCode = StatusCodes.Status200OK;
@@ -100,15 +100,15 @@ namespace Telegram.Bot.Framework.Middlewares
                         throw new NullReferenceException();
                 }
                 catch (Exception e)
-                   when(e is JsonSerializationException || e is NullReferenceException)
+                   when (e is JsonSerializationException || e is NullReferenceException)
                 {
                     _logger.LogError("Unable to deserialize score data. {0}.{1}Content: `{2}`",
                         e.Message, Environment.NewLine, dataContent);
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     return;
                 }
-                
-                await gameHandler.SetGameScoreAsync(_botManager.Bot, scoreData.PlayerId, scoreData.Score);
+
+                await gameHandler.SetGameScoreAsync(_updateManager.Bot, scoreData.PlayerId, scoreData.Score);
                 context.Response.StatusCode = StatusCodes.Status201Created;
             }
             else

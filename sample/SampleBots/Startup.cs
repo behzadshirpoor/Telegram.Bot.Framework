@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RecurrentTasks;
 using SampleBots.Bots.EchoBot;
 using SampleBots.Bots.GreeterBot;
 using Telegram.Bot.Framework;
@@ -37,7 +36,6 @@ namespace SampleBots
             services.AddTelegramBot(echoBotOptions)
                 .AddUpdateHandler<TextMessageEchoer>()
                 .Configure();
-            services.AddTask<BotUpdateGetterTask<EchoerBot>>();
 
             #endregion
 
@@ -48,7 +46,6 @@ namespace SampleBots
                 .AddUpdateHandler<PhotoForwarder>()
                 .AddUpdateHandler<HiCommand>()
                 .Configure();
-            services.AddTask<BotUpdateGetterTask<GreeterBot>>();
 
             #endregion
         }
@@ -81,7 +78,6 @@ namespace SampleBots
             if (env.IsDevelopment())
             {
                 app.UseTelegramBotLongPolling<EchoerBot>();
-                app.StartTask<BotUpdateGetterTask<EchoerBot>>(TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(3));
                 logger.LogInformation("Update getting task is scheduled for bot " + nameof(EchoerBot));
             }
             else
@@ -97,7 +93,6 @@ namespace SampleBots
             if (env.IsDevelopment())
             {
                 app.UseTelegramBotLongPolling<GreeterBot>();
-                app.StartTask<BotUpdateGetterTask<GreeterBot>>(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(3));
                 logger.LogInformation("Update getting task is scheduled for bot " + nameof(GreeterBot));
             }
             else

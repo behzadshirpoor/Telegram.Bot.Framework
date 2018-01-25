@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using Moq;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Framework.Tests.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -23,15 +21,15 @@ namespace Telegram.Bot.Framework.Tests
         {
             const string botUsername = "Test_Bot";
             var mockBot = new Mock<IBot>();
-            mockBot.SetupGet(x => x.UserName)
-                .Returns(botUsername);
+            mockBot.SetupGet(x => x.User)
+                .Returns(new User {Username = botUsername});
 
             var update = new Update
             {
                 Message = new Message
                 {
                     Text = text,
-                    Entities = new List<MessageEntity>
+                    Entities = new[]
                     {
                         new MessageEntity
                         {
@@ -62,8 +60,8 @@ namespace Telegram.Bot.Framework.Tests
         {
             const string botUsername = "Test_Bot";
             var mockBot = new Mock<IBot>();
-            mockBot.SetupGet(x => x.UserName)
-                .Returns(botUsername);
+            mockBot.SetupGet(x => x.User)
+                .Returns(new User {Username = botUsername});
 
             var update = new Update
             {
@@ -84,8 +82,8 @@ namespace Telegram.Bot.Framework.Tests
         {
             const string botUsername = "Test_Bot";
             var mockBot = new Mock<IBot>();
-            mockBot.SetupGet(x => x.UserName)
-                .Returns(botUsername);
+            mockBot.SetupGet(x => x.User)
+                .Returns(new User {Username = botUsername});
 
             var update = new Update
             {

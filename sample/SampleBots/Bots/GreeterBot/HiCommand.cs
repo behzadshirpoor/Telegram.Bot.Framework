@@ -2,7 +2,6 @@
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Telegram.Bot.Framework;
-using Telegram.Bot.Framework.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -34,10 +33,10 @@ namespace SampleBots.Bots.GreeterBot
 
         }
 
-        protected override HiCommandArgs ParseInput(Update update)
+        protected override HiCommandArgs ParseInput(IBot bot, Update update)
         {
             var tokens = Regex.Split(update.Message.Text.Trim(), @"\s+");
-            var args = base.ParseInput(update);
+            var args = base.ParseInput(bot, update);
 
             if (tokens.Length > 1)
             {
@@ -47,19 +46,13 @@ namespace SampleBots.Bots.GreeterBot
             return args;
         }
 
-        public override async Task<UpdateHandlingResult> HandleCommand(Update update, HiCommandArgs args)
+        public override async Task<UpdateHandlingResult> HandleCommand(IBot bot, Update update, HiCommandArgs args)
         {
-            string text;
-            if (args.PersonName is null)
-            {
-                text = HelpText;
-            }
-            else
-            {
-                text = string.Format(HiMessageFormat, args.PersonName);
-            }
+            string text = args.PersonName is null
+                ? HelpText
+                : string.Format(HiMessageFormat, args.PersonName);
 
-            await Bot.Client.SendTextMessageAsync(
+            await bot.Client.SendTextMessageAsync(
                 update.Message.Chat.Id,
                 text,
                 ParseMode.Markdown,

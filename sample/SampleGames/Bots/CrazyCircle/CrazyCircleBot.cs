@@ -13,7 +13,7 @@ namespace SampleGames.Bots.CrazyCircle
 
         public CrazyCircleBot(IOptions<BotOptions<CrazyCircleBot>> botOptions,
             ILogger<CrazyCircleBot> logger)
-            : base(botOptions)
+            : base(botOptions.Value)
         {
             _logger = logger;
         }

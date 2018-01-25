@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
 
 namespace Telegram.Bot.Framework.Tests.Helpers
 {
     public class TestBot : BotBase<TestBot>
     {
-        public TestBot(IOptions<BotOptions<TestBot>> botOptions)
-            : base(botOptions)
+        public TestBot(BotOptionsBase options) : base(options)
         {
-
         }
 
         public override Task HandleUnknownUpdate(Update update)
