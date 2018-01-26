@@ -2,12 +2,24 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.1</TargetFramework>
     <VersionPrefix>1.0.0</VersionPrefix>
-    <VersionSuffix>RC-1</VersionSuffix>
+    <VersionSuffix>rc3</VersionSuffix>
     <LangVersion>latest</LangVersion>
+    <Description>Telegram 🤖 bot 🤖 framework abstractions</Description>
     <RootNamespace>Telegram.Bot.Framework</RootNamespace>
+    <DebugType>portable</DebugType>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>Poulad</Authors>
+    <PackageTags>telegram bot chatbot chat netcore</PackageTags>
+    <PackageProjectUrl>https://github.com/TelegramBots/Telegram.Bot.Framework.git</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/TelegramBots/Telegram.Bot.Framework.git</RepositoryUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/TelegramBots/Telegram.Bot.Framework/master/docs/icon.png</PackageIconUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/TelegramBots/Telegram.Bot.Framework/master/LICENSE</PackageLicenseUrl>
+    <Company>TelegramBots</Company>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     <PackageReference Include="Telegram.Bot" Version="14.0.0-rc-367" />
   </ItemGroup>
 </Project>

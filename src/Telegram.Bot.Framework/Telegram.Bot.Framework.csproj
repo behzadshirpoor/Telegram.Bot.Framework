@@ -2,15 +2,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <VersionPrefix>2.0.0</VersionPrefix>
-    <VersionSuffix>RC-1</VersionSuffix>
-    <Description>Simple framework for building powerful Telegram bots 🤖 in ASP.NET Core</Description>
+    <VersionSuffix>rc4</VersionSuffix>
     <LangVersion>latest</LangVersion>
+    <Description>Simple framework for building powerful 🤖 Telegram bots 🤖 in ASP.NET Core</Description>
+    <RootNamespace>Telegram.Bot.Framework</RootNamespace>
+    <DebugType>portable</DebugType>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Poulad</Authors>
     <PackageTags>telegram bot chatbot chat netcore</PackageTags>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Simple framework for building Telegram bots</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/TelegramBots/Telegram.Bot.Framework.git</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/TelegramBots/Telegram.Bot.Framework.git</RepositoryUrl>
@@ -26,8 +26,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="1.1.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="../Telegram.Bot.Framework.Abstractions/Telegram.Bot.Framework.Abstractions.csproj" />
+    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
+    <PackageReference Include="Telegram.Bot.Framework.Abstractions" Version="1.0.0-rc3" />
   </ItemGroup>
 </Project>
